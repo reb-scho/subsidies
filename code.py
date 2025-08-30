@@ -87,7 +87,7 @@ def load_and_clean(file_path, verbose=False):
 #functions for plotting
 
 
-def plot_fig1(global_elec_df, global_fossil_agg_df):
+def plot_fig1(global_elec_df, global_fossil_agg_df, value_label):
     plt.plot(global_elec_df["Year"], global_elec_df["Value (B USD)"], label="Electricity")
     plt.plot(global_fossil_agg_df["Year"], global_fossil_agg_df["Value (B USD)"], label="Fossil fuels")
     plt.xlabel("Year")
@@ -98,21 +98,23 @@ def plot_fig1(global_elec_df, global_fossil_agg_df):
     plt.legend()
     plt.show()
 
-def plot_fig2(global_elec_df, global_fossil_agg_df):
-    df_concat = pd.concat([global_fossil_agg_df.assign(Product="Fossil fuels"), global_elec_df])
+def plot_fig2(global_elec_df, global_fossil_agg_df, value_label):
+    df_fossil = global_fossil_agg_df.copy()
+    df_fossil["Product"] = "Fossil fuels"
+    df_concat = pd.concat([df_fossil, global_elec_df], ignore_index=True)
     df_wide = df_concat.pivot(index="Year", columns="Product", values="Value (B USD)")
     df_wide.plot.area(stacked=True)
     plt.xlabel("Year")
     plt.ylabel(value_label)
-    plt.title("Figure 2: Stacked area chart of electricity and fossil fuels")
+    plt.title("Figure 2: Stacked Area Chart of electricity and fossil fuels")
     plt.legend(title="Category", loc="upper left")
     plt.show()
 
-def plot_fig3(global_elec_df, global_fossil_df):
+def plot_fig3(global_elec_df, global_fossil_df, value_label):
     plt.plot(global_elec_df["Year"], global_elec_df["Value (B USD)"], label="Electricity")
     for product in global_fossil_df["Product"].unique():
-        plot_df = global_fossil_df[global_fossil_df['Product'] == product]
-        plt.plot(plot_df['Year'], plot_df['Value (B USD)'], label=product)
+        df = global_fossil_df[global_fossil_df["Product"] == product]
+        plt.plot(df["Year"], df["Value (B USD)"], label=product)
     plt.xlabel("Year")
     plt.xticks(rotation=90)
     plt.ylabel(value_label)
@@ -121,27 +123,27 @@ def plot_fig3(global_elec_df, global_fossil_df):
     plt.legend()
     plt.show()
 
-def plot_fig4(global_product_df):
+def plot_fig4(global_product_df, value_label):
     df_wide = global_product_df.pivot(index="Year", columns="Product", values="Value (B USD)")
     df_wide.plot.area(stacked=True)
     plt.xlabel("Year")
     plt.ylabel(value_label)
-    plt.title("Figure 4: Stacked area chart of all products")
+    plt.title("Figure 4: Stacked Area Chart of electricity and fossil fuels")
     plt.legend(title="Category", loc="upper left")
     plt.show()
 
-def plot_fig5(global_fossil_agg_df, global_elec_df):
-    df_concat = pd.concat([global_fossil_agg_df.assign(Product="Fossil fuels"), global_elec_df])
+def plot_fig5(global_fossil_agg_df, global_elec_df, value_label):
+    df_concat = pd.concat([global_fossil_agg_df.assign(Product="Fossil fuels"), global_elec_df], ignore_index=True)
     df_wide = df_concat.pivot(index="Year", columns="Product", values="Value (B USD)")
     df_norm = df_wide.div(df_wide.sum(axis=1), axis=0) * 100
     df_norm.plot.bar(stacked=True)
     plt.xlabel("Year")
     plt.ylabel("Percentage")
-    plt.title("Figure 5: 100% stacked bar chart electricity and fossil fuel subsidies")
+    plt.title("Figure 5: 100% stacked bar chart electricity and fossil fuels")
     plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
     plt.show()
 
-def plot_fig6(global_fossil_df):
+def plot_fig6(global_fossil_df, value_label):
     df_wide = global_fossil_df.pivot(index="Year", columns="Product", values="Value (B USD)")
     df_norm = df_wide.div(df_wide.sum(axis=1), axis=0) * 100
     df_norm.plot.bar(stacked=True)
@@ -151,13 +153,38 @@ def plot_fig6(global_fossil_df):
     plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
     plt.show()
 
-def plot_fig8(global_product_df):
+def plot_fig7(global_product_df, value_label):
     global_product_df.boxplot(column="Value (B USD)", by="Product")
     plt.xticks(rotation=90)
-    plt.title("Figure 8: Global subsidies by product (2010-2023)")
+    plt.title("Figure 7: Global subsidies for electricity, gas and oil (2010-2023)")
     plt.suptitle("")
     plt.ylabel(value_label)
     plt.show()
+
+def plot_fig8(global_product_df, value_label):
+    df = global_product_df[global_product_df["Product"] == "Coal"]
+    df.boxplot(column="Value (B USD)", by="Product")
+    plt.xticks(rotation=90)
+    plt.title("Figure 8: Global subsidies for coal (2010-2023)")
+    plt.suptitle("")
+    plt.ylabel(value_label)
+    plt.show()
+
+def plot_fig9(country_product_df, value_label):
+    n = 8
+    country_product_df[country_product_df["Product"] == "Coal"]["Value (B USD)"].describe()
+    for prod in country_product_df["Product"].unique():
+        if prod != "Coal":
+            n += 1
+            df = country_product_df[country_product_df["Product"] == prod]
+            max_val = df["Value (B USD)"].max()
+            df.boxplot(column="Value (B USD)", by="Year", showfliers=False)
+            plt.xticks(rotation=90)
+            plt.title(f"Figure {n}: Global subsidies for {prod.lower()}")
+            plt.suptitle("")
+            plt.xlabel("Year")
+            plt.ylabel(value_label)
+            plt.show()
 
 def plot_fig12(global_product_df):
     df_sorted = global_product_df.sort_values(["Product", "Year"])
