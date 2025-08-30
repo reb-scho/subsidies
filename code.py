@@ -81,11 +81,20 @@ def load_and_clean(file_path, verbose=False):
     country_total_df['Value (M USD)'] /= 1000
     country_total_df.rename(columns={'Value (M USD)': 'Value (B USD)'}, inplace=True)
 
-    return global_product_df, global_total_df, country_product_df, country_total_df
+    country_elec_df = country_product_df[country_product_df["Product"] == "Electricity"].copy()
+    country_fossil_df = country_product_df[country_product_df["Product"] != "Electricity"].copy()
+    country_fossil_agg_df = country_fossil_df.groupby(["Country", "Year"])["Value (B USD)"].sum().reset_index()
 
+    global_elec_df = global_product_df[global_product_df["Product"] == "Electricity"].copy()
+    global_fossil_df = global_product_df[global_product_df["Product"] != "Electricity"].copy()
+    global_fossil_agg_df = global_fossil_df.groupby("Year")["Value (B USD)"].sum().reset_index()
+
+    return (global_product_df, global_total_df, 
+            country_product_df, country_total_df,
+            country_elec_df, country_fossil_df, country_fossil_agg_df,
+            global_elec_df, global_fossil_df, global_fossil_agg_df)
 
 #functions for plotting
-
 
 def plot_fig1(global_elec_df, global_fossil_agg_df, value_label):
     plt.plot(global_elec_df["Year"], global_elec_df["Value (B USD)"], label="Electricity")
